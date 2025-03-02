@@ -18,33 +18,45 @@ export class InfrastructureStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
       bucketName: ID,
-      blockPublicAccess: new s3.BlockPublicAccess({
-        blockPublicAcls: false,
-        blockPublicPolicy: false,
-        ignorePublicAcls: false,
-        restrictPublicBuckets: false,
-      }),
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      websiteIndexDocument: 'index.html',
     });
 
-    const distribution = new cloudFront.Distribution(
+    const oai = new cloudFront.OriginAccessIdentity(
       this,
-      `${ID}-cloudFront.Distribution`,
+      `${ID}-cloudFront.OriginAccessIdentity`,
       {
-        defaultBehavior: {
-          origin: new cloudFrontOrigins.S3Origin(rsschoolawsshopkazikkluz),
-          viewerProtocolPolicy:
-            cloudFront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        },
-        defaultRootObject: 'index.html',
-        errorResponses: [
-          {
-            httpStatus: 404,
-            responseHttpStatus: 200,
-            responsePagePath: '/index.html',
-          },
-        ],
+        comment: 'cloudfront access to the webstie bucket',
       }
     );
+
+    rsschoolawsshopkazikkluz.grantRead(oai);
+
+    const distribution = new cloudFront.Distribution(this, `${ID}-CloudFront`, {
+      defaultBehavior: {
+        origin: cloudFrontOrigins.S3BucketOrigin.withOriginAccessIdentity(
+          rsschoolawsshopkazikkluz,
+          {
+            originAccessIdentity: oai,
+          }
+        ),
+        viewerProtocolPolicy: cloudFront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudFront.CachePolicy.CACHING_OPTIMIZED,
+      },
+      defaultRootObject: 'index.html',
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+        },
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+        },
+      ],
+    });
 
     new s3deploy.BucketDeployment(this, `${ID}-s3deploy.BucketDeployment`, {
       sources: [s3deploy.Source.asset('../dist')],
@@ -54,7 +66,7 @@ export class InfrastructureStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, `${ID}-bucket-URL`, {
-      value: rsschoolawsshopkazikkluz.bucketDomainName,
+      value: rsschoolawsshopkazikkluz.bucketWebsiteDomainName,
     });
 
     new cdk.CfnOutput(this, `${ID}-cloudFront.CfnOutput`, {
