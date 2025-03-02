@@ -12,8 +12,7 @@ export function useAvailableProducts() {
         `${API_PATHS.product}/products/`
       );
 
-      //@ts-ignore
-      return res.data.products;
+      return res.data;
     }
   );
 }
@@ -33,8 +32,7 @@ export function useAvailableProduct(id?: string) {
       const res = await axios.get<AvailableProduct>(
         `${API_PATHS.product}/products/${id}`
       );
-      //@ts-ignore
-      return res.data.products;
+      return res.data;
     },
     { enabled: !!id }
   );
@@ -51,7 +49,7 @@ export function useRemoveProductCache() {
 
 export function useUpsertAvailableProduct() {
   return useMutation((values: AvailableProduct) =>
-    axios.put<AvailableProduct>(`${API_PATHS.bff}/product`, values, {
+    axios.post<AvailableProduct>(`${API_PATHS.product}/products`, values, {
       headers: {
         Authorization: `Basic ${localStorage.getItem('authorization_token')}`,
       },
