@@ -24,21 +24,51 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
   };
 
   const uploadFile = async () => {
-    console.log('uploadFile to', url);
+    const authToken = localStorage.getItem('authorization_token');
+    const headers: any = {};
+    if (authToken)
+      headers.Authorization = `Basic ${localStorage.getItem(
+        'authorization_token'
+      )}`;
+
     try {
       if (!file) {
         console.error('No file selected');
         return;
       }
+      console.log('authToekn: ', authToken);
+      console.log('headers: ', headers);
       const response = await axios({
         method: 'GET',
         url,
         params: {
           name: encodeURIComponent(file.name),
         },
-      });
-      console.log('File to upload: ', file.name);
-      console.log('Uploading to: ', response.data);
+        headers,
+      })
+        .then((response) => response)
+        .catch((err) => {
+          if (err.response?.status === 401) {
+            window.dispatchEvent(
+              new CustomEvent('global-toast', {
+                detail: { message: '401 Unauthorized', severity: 'error' },
+              })
+            );
+          }
+          if (err.response?.status === 403) {
+            window.dispatchEvent(
+              new CustomEvent('global-toast', {
+                detail: { message: '403 Forbidden', severity: 'error' },
+              })
+            );
+          }
+          return null;
+        });
+
+      if (!response) {
+        return;
+      }
+
       const result = await fetch(response.data, {
         method: 'PUT',
         body: file,
