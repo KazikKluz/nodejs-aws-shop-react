@@ -24,7 +24,10 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
   };
 
   const uploadFile = async () => {
-    console.log('uploadFile to', url);
+    const token = localStorage.getItem('authorization_token');
+    const headers: { Authorization?: string } = {};
+    if (token) headers.Authorization = `Basic ${token}`;
+
     try {
       if (!file) {
         console.error('No file selected');
@@ -36,9 +39,31 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
         params: {
           name: encodeURIComponent(file.name),
         },
-      });
-      console.log('File to upload: ', file.name);
-      console.log('Uploading to: ', response.data);
+        headers,
+      })
+        .then((response) => response)
+        .catch((err) => {
+          if (err.response?.status === 401) {
+            window.dispatchEvent(
+              new CustomEvent('global-toast', {
+                detail: { message: '401 Unauthorized', severity: 'error' },
+              })
+            );
+          }
+          if (err.response?.status === 403) {
+            window.dispatchEvent(
+              new CustomEvent('global-toast', {
+                detail: { message: '403 Forbidden', severity: 'error' },
+              })
+            );
+          }
+          return null;
+        });
+
+      if (!response) {
+        return;
+      }
+
       const result = await fetch(response.data, {
         method: 'PUT',
         body: file,
@@ -48,8 +73,6 @@ export default function CSVFileImport({ url, title }: CSVFileImportProps) {
     } catch (error) {
       console.error('There was an error uploading the file', error);
     }
-
-    //   Get the presigned URL
   };
   return (
     <Box>
