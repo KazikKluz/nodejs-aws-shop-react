@@ -1,11 +1,12 @@
-import * as Yup from "yup";
-import { OrderStatus } from "~/constants/order";
+import * as Yup from 'yup';
+import { OrderStatus } from '~/constants/order';
 
 export const AddressSchema = Yup.object({
-  firstName: Yup.string().required().default(""),
-  lastName: Yup.string().required().default(""),
-  address: Yup.string().required().default(""),
-  comment: Yup.string().default(""),
+  email: Yup.string().email().required().default(''),
+  zip: Yup.string().required().default(''),
+  city: Yup.string().required().default(''),
+  address: Yup.string().required().default(''),
+  comment: Yup.string().default(''),
 }).defined();
 
 export type Address = Yup.InferType<typeof AddressSchema>;
@@ -28,8 +29,20 @@ export type statusHistory = Yup.InferType<typeof statusHistorySchema>;
 export const OrderSchema = Yup.object({
   id: Yup.string().required(),
   items: Yup.array().of(OrderItemSchema).defined(),
-  address: AddressSchema.required(),
-  statusHistory: Yup.array().of(statusHistorySchema).defined(),
+  email: Yup.string(),
+  payment: Yup.object().shape({
+    amount: Yup.number().required(),
+    method: Yup.string().required(),
+    card_last4: Yup.string(),
+  }),
+  delivery: Yup.object().shape({
+    zip: Yup.string().required(),
+    city: Yup.string().required(),
+    address: Yup.string().required(),
+  }),
+  comments: Yup.string().required(),
+  status: Yup.string().required(),
+  total: Yup.number().required(),
 }).defined();
 
 export type Order = Yup.InferType<typeof OrderSchema>;
