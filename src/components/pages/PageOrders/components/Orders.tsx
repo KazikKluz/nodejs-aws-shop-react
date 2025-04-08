@@ -34,9 +34,9 @@ export default function Orders() {
           {data?.map((order) => (
             <TableRow key={order.id}>
               <TableCell component='th' scope='row'>
-                {order.payment?.email}
+                {order.email}
               </TableCell>
-              <TableCell align='right'>{order.items?.length}</TableCell>
+              <TableCell align='right'>{order.payment.amount}</TableCell>
               <TableCell align='right'>
                 {order.delivery?.zip}, {order.delivery?.city},{' '}
                 {order.delivery?.address}

@@ -37,7 +37,7 @@ export default function PageOrder() {
       queryKey: ['order', { id }],
       queryFn: async () => {
         const token = localStorage.getItem('authorization_token');
-        const res = await axios.get<Order>(`${API_PATHS.order}/order/${id}`, {
+        const res = await axios.get<Order>(`${API_PATHS.order}/orders/${id}`, {
           headers: token ? { Authorization: `Basic ${token}` } : undefined,
         });
         return res.data;
